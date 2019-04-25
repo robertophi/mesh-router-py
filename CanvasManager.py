@@ -32,14 +32,10 @@ class CanvasManager():
         '''
          Check if [x,y] is in node
         '''
-        print("intersection:")
-        print(node)
         [x0,y0,x1,y1] = self.canvas.coords(node.ID)
         if x > x0 and x < x1 and y > y0 and y < y1:
-            print('intersection')
             return True
         else:
-            print('no intersection')
             return False
 
     def check_click_intersection(self, x,y):
@@ -57,8 +53,6 @@ class CanvasManager():
         '''
         Callback for Ctrl + left mouse click
         '''
-        print("Click:",event.x, event.y)
-        print("Create new router:")
         [x,y] = [event.x,event.y]      
         if self.check_click_intersection(x,y) == -1:
             new_router = Node(self.canvas, event, node_type='router')
@@ -69,8 +63,6 @@ class CanvasManager():
         '''
         Callback for left mouse click
         '''
-        print("Click:",event.x, event.y)
-        print("Create new node:")
         [x,y] = [event.x,event.y]
         if self.check_click_intersection(x,y) == -1:
             new_node = Node(self.canvas, event, node_type='basic_node')
@@ -102,15 +94,18 @@ class CanvasManager():
         
         
     def get_connections_list(self):
-        dist_matrix = self.get_mesh_connection_matrix()
-        self.dijkstra_graph.V = dist_matrix.shape[0]
-        self.dijkstra_graph.graph = dist_matrix        
-        # Get connection table
-        rx_connection_list = self.dijkstra_graph.dijkstra(0)        
-        # Remove virtual node
-        rx_connection_list = rx_connection_list[1:]        
-        rx_connection_list = [c-1 for c in rx_connection_list]
-        return rx_connection_list
+        if self.node_list == []:
+            return []
+        else:
+            dist_matrix = self.get_mesh_connection_matrix()
+            self.dijkstra_graph.V = dist_matrix.shape[0]
+            self.dijkstra_graph.graph = dist_matrix        
+            # Get connection table
+            rx_connection_list = self.dijkstra_graph.dijkstra(0)        
+            # Remove virtual node
+            rx_connection_list = rx_connection_list[1:]        
+            rx_connection_list = [c-1 for c in rx_connection_list]
+            return rx_connection_list
 
 
     def draw_connections(self):
@@ -162,7 +157,6 @@ class CanvasManager():
         Callback for left mouse motion
         '''
         [x,y] = [event.x,event.y]
-        print(x,y)
         obj = self.check_click_intersection(x,y)
         if obj != -1:
             self.move_node(obj, event)
@@ -187,7 +181,6 @@ class CanvasManager():
         '''
         Callback for right click
         '''
-        print("Delete node:")
         [x,y] = [event.x,event.y]
         obj = self.check_click_intersection(x,y)
         if obj != -1:       

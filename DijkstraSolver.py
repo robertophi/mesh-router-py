@@ -1,5 +1,9 @@
 import sys 
   
+
+
+
+  
 class Graph(): 
   
     def __init__(self, vertices): 
@@ -61,7 +65,4 @@ class Graph():
                 if self.graph[u][v] > 0 and sptSet[v] == False and dist[v] > dist[u] + self.graph[u][v]: 
                     dist[v] = dist[u] + self.graph[u][v] 
                     rx_connection_list[v] = u
-                    print('Connection: ',u, ' --> ', v)
-        print(rx_connection_list)
-        self.printSolution(dist) 
         return rx_connection_list
