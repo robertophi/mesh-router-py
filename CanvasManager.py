@@ -15,11 +15,13 @@ class CanvasManager():
         self.canvas.bind("<B1-Motion>", self.drag_node_canvas)
         self.canvas.bind("<Double-Button-3>", self.delete_all_canvas)
         self.canvas.bind("<Control-Button-1>", self.create_router)
+        self.canvas.bind("<Shift-Button-1>", self.measure_distance)
         self.canvas.bind("<ButtonRelease-1>", self.release_canvas)
         self.line_list = []
         self.node_list = []
+        self.txt_list = []
         self.last_moved_node = -1
-
+        self.prev_measure_node = -1 
 
 
 
@@ -59,7 +61,10 @@ class CanvasManager():
         for line in self.line_list.copy():
             self.canvas.delete(line)
             self.line_list.remove(line)
-        
+        for txt in self.txt_list.copy():
+            self.canvas.delete(txt)
+            self.txt_list.remove(txt)
+
         # No nodes in graph or no router in graph
         if rx_connection_list == []:
             return
@@ -71,7 +76,9 @@ class CanvasManager():
                 xc1,yc1 = node_child.get_center()
                 xc2,yc2 = node_parent.get_center()
                 line = self.canvas.create_line(xc1,yc1,xc2,yc2)
+                txt = self.canvas.create_text(int(xc1/2+xc2/2), int(yc1/2+yc2/2), text=str(int(self.dijkstra_graph.get_distance(node_child, node_parent))))
                 self.line_list.append(line)
+                self.txt_list.append(txt)
         for node in self.node_list:
             self.canvas.itemconfigure(node.txt,text=node.connection_tier)
 
@@ -119,7 +126,7 @@ class CanvasManager():
      - Button2 click         : remove node
      - Button2 double click  : remove all nodes
      - Ctrol + Button1 click : add router
-
+     - Shift + Button1 click : measure distance between two nodes (shift click one, shift click another one)
     '''
     def drag_node_canvas(self, event):
         '''
@@ -161,6 +168,8 @@ class CanvasManager():
             self.delete_node(node)
         for line in self.line_list.copy():
             self.delete_line(line)
+        self.last_moved_node = -1
+        self.prev_measure_node = -1
         self.draw_connections()
 
     def intersect(self, node, x,y):
@@ -173,6 +182,8 @@ class CanvasManager():
         else:
             return False
 
+
+        
     def check_click_intersection(self, x,y):
         '''
         Check if the mouse click intersects any node,
@@ -183,6 +194,25 @@ class CanvasManager():
                 if self.intersect(node, x, y) == True:
                     return node
         return -1
+
+    def measure_distance(self, event):
+        [x,y] = [event.x,event.y]      
+        clicked_node = self.check_click_intersection(x,y)
+        if clicked_node != -1:
+            if self.prev_measure_node == -1:
+                self.prev_measure_node = clicked_node
+            else:
+                previous_node = self.prev_measure_node
+                self.prev_measure_node = clicked_node
+
+                xc1,yc1 = previous_node.get_center()
+                xc2,yc2 = clicked_node.get_center()
+                line = self.canvas.create_line(xc1,yc1,xc2,yc2,dash=(5,5))
+                txt = self.canvas.create_text(int(xc1/2+xc2/2), int(yc1/2+yc2/2), text=str(int(self.dijkstra_graph.get_distance(clicked_node, previous_node))))
+                self.line_list.append(line)
+                self.txt_list.append(txt)
+                self.prev_measure_node = -1
+
 
     def create_router(self, event):
         '''
@@ -206,3 +236,5 @@ class CanvasManager():
             self.node_list.append(new_node)
             self.last_moved_node = new_node
         self.draw_connections()
+
+    

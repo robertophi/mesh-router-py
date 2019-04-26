@@ -14,12 +14,13 @@ class Graph():
         if node1 == node2:
             return -1
         elif node1.type == 'router' and node2.type == 'router':
-            return 0.1
+            return 1e-10
         else:
             xc1,yc1 = node1.get_center() 
             xc2,yc2 = node2.get_center() 
-            distance =  (xc2-xc1)**2 + (yc2-yc1)**2
-            return distance
+            distance =  ((xc2-xc1)**2 + (yc2-yc1)**2)**0.5
+            distance /= 10
+            return distance**1.5
   
     # A utility function to find the vertex with  
     # minimum distance value, from the set of vertices  
