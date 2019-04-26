@@ -37,4 +37,4 @@ class Node():
     
     def update_txt(self):
         self.canvas.itemconfigure(self.txt,text=self.connection_tier)
-        self.canvas.itemconfigure(self.txt_power,text=self.node_power)
+        self.canvas.itemconfigure(self.txt_power,text="P:"+str(self.node_power))

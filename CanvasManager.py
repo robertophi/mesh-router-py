@@ -25,7 +25,7 @@ class CanvasManager():
         self.txt_list = []
         self.last_moved_node = -1
         self.prev_measure_node = -1 
-        
+        self.last_measure_distance_time = time.time()
         
     def get_connections_list(self):
         if self.node_list == []:
@@ -129,12 +129,15 @@ class CanvasManager():
     '''
 
     def change_power_canvas(self, event):
+        '''
+        Callback for mouse wheel
+        '''
         obj = self.check_click_intersection(event.x,event.y)
         if obj != -1:
             if event.num == 4:
-                obj.node_power += 5
+                obj.node_power += 2
             elif event.num == 5:
-                obj.node_power -= 5
+                obj.node_power -= 2
             obj.update_txt()
             self.draw_connections()
 
@@ -144,16 +147,19 @@ class CanvasManager():
         '''
         Callback for left mouse motion
         '''
-        [x,y] = [event.x,event.y]
-        obj = self.check_click_intersection(x,y)
-        if obj != -1:
-            self.move_node(obj, event)
+        if (time.time()-self.last_measure_distance_time) < 1:
+            return 
         else:
-            self.move_node(self.last_moved_node, event)
-        
-        
-        if len(self.node_list)<20:
-            self.draw_connections()        
+            [x,y] = [event.x,event.y]
+            obj = self.check_click_intersection(x,y)
+            if obj != -1:
+                self.move_node(obj, event)
+            else:
+                self.move_node(self.last_moved_node, event)
+            
+            
+            if len(self.node_list)<20:
+                self.draw_connections()        
 
     def release_canvas(self, event):
         '''
@@ -208,6 +214,9 @@ class CanvasManager():
         return -1
 
     def measure_distance(self, event):
+        '''
+        Callback for shift click
+        '''
         [x,y] = [event.x,event.y]      
         clicked_node = self.check_click_intersection(x,y)
         if clicked_node != -1:
@@ -220,11 +229,11 @@ class CanvasManager():
                 xc1,yc1 = previous_node.get_center()
                 xc2,yc2 = clicked_node.get_center()
                 line = self.canvas.create_line(xc1,yc1,xc2,yc2,dash=(5,5))
-                txt = self.canvas.create_text(int(xc1/2+xc2/2), int(yc1/2+yc2/2), text=str(int(self.dijkstra_graph.get_distance(clicked_node, previous_node))))
+                txt = self.canvas.create_text(int(xc1/2+xc2/2), int(yc1/2+yc2/2), text=str(round(self.dijkstra_graph.get_distance(clicked_node, previous_node),3)))
                 self.line_list.append(line)
                 self.txt_list.append(txt)
-                self.prev_measure_node = -1
-
+                self.prev_measure_node = clicked_node
+        self.last_measure_distance_time = time.time()
 
     def create_router(self, event):
         '''
