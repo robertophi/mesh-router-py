@@ -17,16 +17,14 @@ class CanvasManager():
         self.canvas.bind("<Control-Button-1>", self.create_router)
         self.canvas.bind("<Shift-Button-1>", self.measure_distance)
         self.canvas.bind("<ButtonRelease-1>", self.release_canvas)
+        self.canvas.bind("<Button-4>", self.change_power_canvas)
+        self.canvas.bind("<Button-5>", self.change_power_canvas)
+
         self.line_list = []
         self.node_list = []
         self.txt_list = []
         self.last_moved_node = -1
         self.prev_measure_node = -1 
-
-
-
-
-
         
         
     def get_connections_list(self):
@@ -76,12 +74,13 @@ class CanvasManager():
                 xc1,yc1 = node_child.get_center()
                 xc2,yc2 = node_parent.get_center()
                 line = self.canvas.create_line(xc1,yc1,xc2,yc2)
-                txt = self.canvas.create_text(int(xc1/2+xc2/2), int(yc1/2+yc2/2), text=str(int(self.dijkstra_graph.get_distance(node_child, node_parent))))
+                txt = self.canvas.create_text(int(xc1/2+xc2/2), int(yc1/2+yc2/2),
+                                              text=str(round(self.dijkstra_graph.get_distance(node_child, node_parent),3))
+                                              )
                 self.line_list.append(line)
                 self.txt_list.append(txt)
         for node in self.node_list:
-            self.canvas.itemconfigure(node.txt,text=node.connection_tier)
-
+            node.update_txt()
         return            
     
         
@@ -98,22 +97,22 @@ class CanvasManager():
         deltax = int(-(xc-x)/N)
         deltay = int(-(yc-y)/N)
         for _ in range(0,N):
-            self.canvas.move(self.last_moved_node.ID, deltax,deltay)
-            self.canvas.move(self.last_moved_node.txt, deltax,deltay)
+            self.last_moved_node.move(deltax, deltay)
             self.canvas.update()
             time.sleep(t/N)
 
         
-    def move_node(self, obj, event):
+    def move_node(self, node, event):
         [x,y] = [event.x,event.y]
-        xc, yc = obj.get_center()
-        self.canvas.move(obj.ID, -(xc-x),-(yc-y))
-        self.canvas.move(obj.txt, -(xc-x),-(yc-y))
-        self.last_moved_node = obj    
+        xc, yc = node.get_center()
+        node.move(-(xc-x),-(yc-y))
+
+        self.last_moved_node = node    
 
     def delete_node(self, node):
         self.canvas.delete(node.ID)
         self.canvas.delete(node.txt)
+        self.canvas.delete(node.txt_power)
         self.node_list.remove(node)
 
     def delete_line(self, line):
@@ -128,6 +127,19 @@ class CanvasManager():
      - Ctrol + Button1 click : add router
      - Shift + Button1 click : measure distance between two nodes (shift click one, shift click another one)
     '''
+
+    def change_power_canvas(self, event):
+        obj = self.check_click_intersection(event.x,event.y)
+        if obj != -1:
+            if event.num == 4:
+                obj.node_power += 5
+            elif event.num == 5:
+                obj.node_power -= 5
+            obj.update_txt()
+            self.draw_connections()
+
+
+
     def drag_node_canvas(self, event):
         '''
         Callback for left mouse motion
@@ -236,5 +248,3 @@ class CanvasManager():
             self.node_list.append(new_node)
             self.last_moved_node = new_node
         self.draw_connections()
-
-    

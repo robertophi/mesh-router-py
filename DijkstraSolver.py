@@ -1,8 +1,5 @@
 import sys 
-  
-
-
-
+import numpy as np
 
 class Graph(): 
   
@@ -18,9 +15,16 @@ class Graph():
         else:
             xc1,yc1 = node1.get_center() 
             xc2,yc2 = node2.get_center() 
+            p1 = node1.node_power
+            p2 = node2.node_power
             distance =  ((xc2-xc1)**2 + (yc2-yc1)**2)**0.5
-            distance /= 10
-            return distance**1.5
+            distance = distance/10
+            # Forward delivery ratio (prob that data packet successfully arrives)
+            df = np.exp(-distance/p1)
+            # Backwards delivery ratio (prob that ack is successfull)
+            dr = np.exp(-distance/p2)
+            etx = 1/(df*dr+1e-10)
+            return etx
   
     # A utility function to find the vertex with  
     # minimum distance value, from the set of vertices  
