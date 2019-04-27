@@ -7,21 +7,23 @@ class Graph():
         self.node_list = node_list
         self.sptSet = []
         
-    def get_distance(self, node1, node2):
-        if node1 == node2:
+    def get_distance(self, node_tx, node_rx):
+        if node_tx == node_rx:
             return -1
-        elif node1.type == 'router' and node2.type == 'router':
+        elif node_tx.type == 'router' and node_rx.type == 'router':
             return 1e-10
         else:
-            xc1,yc1 = node1.get_center() 
-            xc2,yc2 = node2.get_center() 
-            p1 = node1.node_power
-            p2 = node2.node_power
+            xc1,yc1 = node_tx.get_center() 
+            xc2,yc2 = node_rx.get_center() 
+            p1 = node_tx.node_power
+            p2 = node_rx.node_power
+            if p1==0 or p2==0:
+                return 1000
             distance =  ((xc2-xc1)**2 + (yc2-yc1)**2)**0.5
             distance = distance/10
-            # Forward delivery ratio (prob that data packet successfully arrives)
+            # df : forward delivery ratio (prob that data packet successfully arrives)
+            # dr : backwards delivery ratio (prob that ack is successfull)
             df = np.exp(-distance/p1)
-            # Backwards delivery ratio (prob that ack is successfull)
             dr = np.exp(-distance/p2)
             etx = 1/(df*dr+1e-10)
             return etx
@@ -29,26 +31,16 @@ class Graph():
     # A utility function to find the vertex with  
     # minimum distance value, from the set of vertices  
     # not yet included in shortest path tree 
-    def minDistance(self, src): 
+    def minDistance(self, src, current_dist_list): 
   
-        # Initilaize minimum distance for next node 
-        min_dist = sys.maxsize 
-        min_index = src
         # Search not nearest vertex not in the  
         # shortest path tree 
-        for c in range(len(self.node_list)):
-            if self.sptSet[c] == False:
-                node_child = self.node_list[c]
-                for p in range(len(self.node_list)):
-                    node_parent = self.node_list[p]
-                    if self.sptSet[p] == True:
-                        dist = self.get_distance(node_child, node_parent)
-                        if dist < min_dist:
-                            min_dist = dist
-                            min_index = c
+        sorted_dists = np.argsort(current_dist_list)
+        for node_id in sorted_dists:
+            if self.sptSet[node_id] == False:
+                return node_id
  
-  
-        return min_index 
+        
   
     # Funtion that implements Dijkstra's single source  
     # shortest path algorithm for a graph represented  
@@ -65,7 +57,7 @@ class Graph():
   
             # 'u' is the node, not yet chosen (not in sptSet)
             # that has the minum distance to some other node IN the sptSet
-            u = self.minDistance(src) 
+            u = self.minDistance(src, dist) 
   
             # Now that 'u' has been chosen, put it in the sptSet
             self.sptSet[u] = True
@@ -75,18 +67,22 @@ class Graph():
             # distance is greater than new distance and 
             # the vertex in not in the shotest path tree 
             for v in range(len(self.node_list)): 
-                dist_uv = self.get_distance(self.node_list[u], self.node_list[v])
-                if dist_uv != -1 and self.sptSet[v] == False:
-                    if dist[v] > dist[u] + dist_uv: 
-                        dist[v] = dist[u] + dist_uv
-                        rx_connection_list[v] = u
+                if self.sptSet[v] == False:
+                    dist_uv = self.get_distance(node_tx=self.node_list[u],
+                                                node_rx=self.node_list[v])
+                    if dist_uv != -1:
+                        if dist[v] > dist[u] + dist_uv: 
+                            dist[v] = dist[u] + dist_uv
+                            rx_connection_list[v] = u
 
-                        # Track the distance from node 'v' to router
-                        if self.node_list[v].type == 'router':            # Node is a router
-                            self.node_list[v].connection_tier = 0           
-                        elif self.node_list[u].type == 'router':          # Node is connected to router
-                            self.node_list[v].connection_tier = 1           
-                        else:                                             # Node is connected to another node
-                            self.node_list[v].connection_tier = self.node_list[u].connection_tier + 1
-                        
+                            # Track the distance from node 'v' to router
+                            if self.node_list[v].type == 'router':            # Node is a router
+                                self.node_list[v].connection_tier = 0           
+                            elif self.node_list[u].type == 'router':          # Node is connected to router
+                                self.node_list[v].connection_tier = 1           
+                            else:                                             # Node is connected to another node
+                                self.node_list[v].connection_tier = self.node_list[u].connection_tier + 1
+        
+        self.rx_distance_list = dist  
+        self.rx_connection_list = rx_connection_list               
         return rx_connection_list
