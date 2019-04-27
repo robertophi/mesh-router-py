@@ -14,7 +14,5 @@ def mesh_simulation():
 
     root.mainloop()
 
-
-
 if __name__ == "__main__":
     mesh_simulation()

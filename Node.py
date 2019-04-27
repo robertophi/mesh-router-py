@@ -1,3 +1,6 @@
+
+import numpy as np
+
 nodes_settings = {'router'     : ['red',30],
                   'basic_node' : ['blue',20]
                  }
@@ -42,6 +45,14 @@ class Node():
         self.canvas.move(self.txt_power, dx, dy)
         self.center = [self.center[0] + dx, self.center[1]+dy]
     
+    def move_to(self, x, y):
+        x = np.clip(x,0,800)
+        y = np.clip(y,0,800)
+        [x0, y0] = self.center
+        dx = x-x0
+        dy = y-y0
+        self.move(dx,dy)
+
 
 
     def update_txt(self):
