@@ -3,7 +3,7 @@ nodes_settings = {'router'     : ['red',30],
                  }
  
 class Node():
-    def __init__(self, canvas, event, node_type='basic_node', node_power=50):
+    def __init__(self, canvas, x,y, node_type='basic_node', node_power=50):
         assert node_type in nodes_settings.keys(), "Undefined type of node: {}".format(node_type)
         self.type = node_type
         self.canvas = canvas
@@ -17,11 +17,11 @@ class Node():
         # Distance from this node to the router
         self.connection_tier = 0
 
-        self.ID = canvas.create_rectangle(event.x-self.size, event.y-self.size,
-                                    event.x+self.size, event.y+self.size,
+        self.ID = canvas.create_rectangle(x-self.size, y-self.size,
+                                          x+self.size, y+self.size,
                                     outline='white', fill=self.color)
-        self.txt = canvas.create_text(event.x, event.y-10, text="", fill='white')        
-        self.txt_power = canvas.create_text(event.x, event.y+10, text="", fill='white')
+        self.txt       = canvas.create_text(x, y-10, text="", fill='white')        
+        self.txt_power = canvas.create_text(x, y+10, text="", fill='white')
 
 
         x0,y0, x1, y1 = self.canvas.coords(self.ID)

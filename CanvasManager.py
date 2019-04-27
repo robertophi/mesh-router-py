@@ -1,40 +1,39 @@
 from tkinter import *
 import numpy as np
-from DijkstraSolver import Graph
-from Node import Node
 import time
 import os
 import types
 
-class CanvasManager():
+from DijkstraSolver import Graph
+from CanvasBase import CanvasBase
+from Node import Node
+
+
+class CanvasManager(CanvasBase):
     def __init__(self, canvas, root, **kwargs):
-        self.canvas = canvas
-        self.root = root
+        super(CanvasManager, self).__init__(canvas, root, **kwargs)
         self.dijkstra_graph = Graph(0)
 
-        self.canvas.bind("<Button-1>", self.create_node)
-        self.canvas.bind("<Button-3>", self.delete_node_canvas)
-        self.canvas.bind("<B1-Motion>", self.drag_node_canvas)
-        self.canvas.bind("<Double-Button-3>", self.delete_all_canvas)
-        self.canvas.bind("<Control-Button-1>", self.create_router)
-        self.canvas.bind("<Shift-Button-1>", self.measure_distance)
-        self.canvas.bind("<ButtonRelease-1>", self.release_canvas)
-        self.canvas.bind_all("r", self.make_random_canvas)
+        self.canvas.bind("<Button-1>", self.create_node_callback)
+        self.canvas.bind("<Button-3>", self.delete_node_callback)
+        self.canvas.bind("<B1-Motion>", self.drag_node_callback)
+        self.canvas.bind("<Double-Button-3>", self.clear_canvas_callback)
+        self.canvas.bind("<Control-Button-1>", self.create_router_callback)
+        self.canvas.bind("<Shift-Button-1>", self.measure_distance_callback)
+        self.canvas.bind("<ButtonRelease-1>", self.release_button_callback)
+        self.canvas.bind_all("r", self.make_random_canvas_callback)
         self.canvas.bind_all("d", self.measure_all_distances_from_node)
         self.canvas.bind_all("s", self.optimize_router_position)
-        #self.canvas.bind_all("<space>", self.make_random_canvas)
+        #self.canvas.bind_all("<space>", self.make_random_canvas_callback)
         if os.name == 'nt': # Windows
-            self.canvas.bind("<MouseWheel>", self.change_power_canvas)
+            self.canvas.bind("<MouseWheel>", self.change_node_power_callback)
         else:               #Linux
-            self.canvas.bind("<Button-4>", self.change_power_canvas)
-            self.canvas.bind("<Button-5>", self.change_power_canvas)
+            self.canvas.bind("<Button-4>", self.change_node_power_callback)
+            self.canvas.bind("<Button-5>", self.change_node_power_callback)
 
-        self.line_list = []
-        self.node_list = []
-        self.txt_list = []
-        self.last_moved_node = -1
+        
         self.prev_measure_node = -1 
-        self.last_measure_distance_time = time.time()
+        self.last_measure_distance_callback_time = time.time()
 
 
     def get_connections_list(self):
@@ -116,21 +115,10 @@ class CanvasManager():
 
 
         
-    def move_node(self, node, event):
-        [x,y] = [event.x,event.y]
-        xc, yc = node.get_center()
-        node.move(-(xc-x),-(yc-y))
-        self.last_moved_node = node    
 
-    def delete_node(self, node):
-        self.canvas.delete(node.ID)
-        self.canvas.delete(node.txt)
-        self.canvas.delete(node.txt_power)
-        self.node_list.remove(node)
 
-    def delete_line(self, line):
-        self.canvas.delete(line)
-        self.line_list.remove(line)
+
+
 
     ''' 
     Buttons callbacks
@@ -140,7 +128,11 @@ class CanvasManager():
      - Ctrol + Button1 click : add router
      - Shift + Button1 click : measure distance between two nodes (shift click one, shift click another one)
      - Keyboard <r> press    : make random graph with 20 nodes
+     - Keyboard <s> press    : optimize the position of the last added router´
+     - Keyboard <d> press    : measure the distance from target node to all other nodes
     '''
+
+
     def average_node_distance(self):
         ''' 
         Get the average distance from a node to a router
@@ -161,7 +153,7 @@ class CanvasManager():
             return
         else:
             ## Optimize position
-            ##### Move router to N random positions first, and first the best initial value
+            ##### TODO : Move router to N random positions first, and first the best initial value
             last_average_dist = self.average_node_distance()
             dx = 10
             dy = 10
@@ -204,32 +196,27 @@ class CanvasManager():
 
 
 
-    def make_random_canvas(self, event):
+    def make_random_canvas_callback(self, event):
         '''
         Callback for 'r' keyboard key press
         '''
-        def make_random_fake_event():
-            [x, y] = [np.random.randint(30,self.canvas.winfo_height()-30),
-                      np.random.randint(30,self.canvas.winfo_width() -30)]
-            fake_event = types.SimpleNamespace()
-            fake_event.x = x
-            fake_event.y = y
-            return fake_event
-
         print('Random board...')
-        self.delete_all_canvas(None)       
-        self.create_router(make_random_fake_event())
+        self.clear_canvas_callback(None)       
+        self.create_router(np.random.randint(30,self.canvas.winfo_height()-30),
+                           np.random.randint(30,self.canvas.winfo_width() -30))
 
         for n in range(0,20):
             tries = 0
             while(tries < 1000):
                 tries += 1
-                event = make_random_fake_event()
-                if self.check_any_intersection(event.x,event.y) == -1:
-                    self.create_node(event)
+                [x,y] = [np.random.randint(30,self.canvas.winfo_height()-30),
+                           np.random.randint(30,self.canvas.winfo_width() -30)]
+                if self.check_any_intersection(x,y) == -1:
+                    self.create_node(x, y)
                     tries = 1000
+        self.update_canvas_complete()
 
-    def change_power_canvas(self, event):
+    def change_node_power_callback(self, event):
         '''
         Callback for mouse wheel
         '''
@@ -251,11 +238,11 @@ class CanvasManager():
 
 
 
-    def drag_node_canvas(self, event):
+    def drag_node_callback(self, event):
         '''
         Callback for left mouse motion
         '''
-        if (time.time()-self.last_measure_distance_time) < 1:
+        if (time.time()-self.last_measure_distance_callback_time) < 1:
             return 
         else:
             [x,y] = [event.x,event.y]
@@ -268,16 +255,16 @@ class CanvasManager():
         self.update_canvas_complete()  
         print(self.average_node_distance())
 
-    def release_canvas(self, event):
+    def release_button_callback(self, event):
         '''
         Callback for button1 release
         '''
-        if (time.time()-self.last_measure_distance_time) < 1:
+        if (time.time()-self.last_measure_distance_callback_time) < 1:
             return 
         else:
             self.update_canvas_complete()
 
-    def delete_node_canvas(self,event):
+    def delete_node_callback(self,event):
         '''
         Callback for right click
         '''
@@ -288,7 +275,7 @@ class CanvasManager():
         self.update_canvas_complete()
  
 
-    def delete_all_canvas(self, event):
+    def clear_canvas_callback(self, event):
         '''
         Callback for double right click
         '''
@@ -300,28 +287,14 @@ class CanvasManager():
         self.prev_measure_node = -1
         self.update_canvas_complete()
 
-    def intersect(self, node, x,y):
-        '''
-         Check if [x,y] is in node
-        '''
-        [x0,y0,x1,y1] = self.canvas.coords(node.ID)
-        if x > x0 and x < x1 and y > y0 and y < y1:
-            return True
-        else:
-            return False
 
-    def check_any_intersection(self, x,y):
-        '''
-        Check if the mouse click intersects any node,
-         - returns the first intersected node or -1 in case of false
-        '''
-        if self.node_list != []:
-            for node in self.node_list:
-                if self.intersect(node, x, y) == True:
-                    return node
-        return -1
+
+
 
     def measure_all_distances_from_node(self, event):
+        '''
+        Callback for 'd' keyboard press
+        '''
         [x,y] = [event.x,event.y]      
         clicked_node = self.check_any_intersection(x,y)
         if clicked_node == -1:
@@ -336,7 +309,7 @@ class CanvasManager():
                 self.line_list.append(line)
                 self.txt_list.append(txt)
 
-    def measure_distance(self, event):
+    def measure_distance_callback(self, event):
         '''
         Callback for shift click
         '''
@@ -357,27 +330,20 @@ class CanvasManager():
                 self.line_list.append(line)
                 self.txt_list.append(txt)
                 self.prev_measure_node = clicked_node
-        self.last_measure_distance_time = time.time()
+        self.last_measure_distance_callback_time = time.time()
 
-    def create_router(self, event):
+    def create_router_callback(self, event):
         '''
         Callback for Ctrl + left mouse click
         '''
-        [x,y] = [event.x,event.y]      
-        if self.check_any_intersection(x,y) == -1:
-            new_router = Node(self.canvas, event, node_type='router')
-            self.node_list.append(new_router)
-            self.last_moved_node = new_router
-
+        [x,y] = [event.x,event.y]
+        self.create_router(x,y)   
         self.update_canvas_complete()
 
-    def create_node(self, event):
+    def create_node_callback(self, event):
         '''
         Callback for left mouse click
         '''
         [x,y] = [event.x,event.y]
-        if self.check_any_intersection(x,y) == -1:
-            new_node = Node(self.canvas, event, node_type='basic_node')
-            self.node_list.append(new_node)
-            self.last_moved_node = new_node
+        self.create_node(x,y)
         self.update_canvas_complete()
