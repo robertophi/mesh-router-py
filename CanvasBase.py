@@ -3,9 +3,9 @@ from Node import Node
 
 class CanvasBase():
 
-    def __init__(self, canvas, root, **kwargs):
+    def __init__(self, canvas, frame, **kwargs):
         self.canvas = canvas
-        self.root = root
+        self.frame = frame
         self.line_list = []
         self.node_list = []
         self.txt_list = []

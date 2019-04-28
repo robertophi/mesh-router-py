@@ -9,9 +9,9 @@ from CanvasBase import CanvasBase
 from Node import Node
 from Optimizer import RouterOptimizer
 
-class CanvasManager(CanvasBase):
-    def __init__(self, canvas, root, **kwargs):
-        super(CanvasManager, self).__init__(canvas, root, **kwargs)
+class MeshManager(CanvasBase):
+    def __init__(self, canvas, frame, **kwargs):
+        super(MeshManager, self).__init__(canvas, frame, **kwargs)
         self.dijkstra_graph = Graph(0)
         self.router_optimizer = RouterOptimizer(self)
 
@@ -136,13 +136,14 @@ class CanvasManager(CanvasBase):
 
 
 
-    def optimize_router_position(self, event):
+    def optimize_router_position(self, event=None):
         '''
         Callback for keyboard key 's'
         '''
-        self.router_optimizer.optimize_router()
+        #self.router_optimizer.optimize_router()
+        self.router_optimizer.optimize_router_scipy()
 
-    def make_random_canvas_callback(self, event):
+    def make_random_canvas_callback(self, event=None):
         '''
         Callback for 'r' keyboard key press
         '''
@@ -220,7 +221,7 @@ class CanvasManager(CanvasBase):
         self.update_canvas_complete()
  
 
-    def clear_canvas_callback(self, event):
+    def clear_canvas_callback(self, event=None):
         '''
         Callback for double right click
         '''
