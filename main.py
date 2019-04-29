@@ -36,13 +36,16 @@ def mesh_simulation():
     ''' Main menu '''
     menu_bar = Menu(root)
     ''' First menu item'''
-    menu_bar.add_command(label='Randomize', command=mesh_manager.make_random_canvas_callback)
+    #menu_bar.add_command(label='Randomize', command=mesh_manager.make_random_canvas_callback)
     ''' Second menu item'''
-    menu_bar.add_command(label='Optimize',command=mesh_manager.optimize_router_position)
+    #menu_bar.add_command(label='Optimize',command=mesh_manager.optimize_router_position)
     ''' Third menu item - drop down menu '''
-    file = Menu(menu_bar)
+    file = Menu(menu_bar,tearoff=False)
     file.add_command(label='Exit')
     menu_bar.add_cascade(label="File", menu=file)
+    ''' About menu item'''
+    menu_bar.add_command(label='About')
+    ''' Second menu item'''
     ''' Config root to use this menu'''
     root.config(menu=menu_bar)
 
