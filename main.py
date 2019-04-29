@@ -1,11 +1,11 @@
 import sys
-print(sys.version)
-
 from tkinter import *
+import cProfile
+
+sys.path.append('./scr')
 from MeshManager import MeshManager
 from ControlsManager import ControlsManager
 from WindowManager import WindowManager
-import cProfile
 
 
 def mesh_simulation():
