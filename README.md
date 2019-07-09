@@ -11,8 +11,8 @@ Router position optimization is done with coarse grid search followed by a fine 
 
 
 
-![Exemple 0](images/img1.png?raw=true "Title")
+![](screenshots/ss06.png)
 
 
 
-![Exemple 1](images/img1.png?raw=true "Title")
+![](screenshots/ss01.png)
